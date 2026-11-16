@@ -38,6 +38,54 @@ function favKey(sys: GameSystem, vals: Values): string {
   return `${sys.id}|${JSON.stringify(norm)}`;
 }
 
+const DELETE_HOLD_MS = 2000;
+
+/** Botão que só dispara depois de segurar por 2s, com barra enchendo. */
+function HoldButton({ onHold, label, children }: { onHold: () => void; label: string; children: React.ReactNode }) {
+  const [on, setOn] = useState(false);
+  const timer = useRef<number>();
+  const start = () => {
+    window.clearTimeout(timer.current);
+    setOn(true);
+    timer.current = window.setTimeout(() => {
+      setOn(false);
+      onHold();
+    }, DELETE_HOLD_MS);
+  };
+  const stop = () => {
+    window.clearTimeout(timer.current);
+    setOn(false);
+  };
+  useEffect(() => () => window.clearTimeout(timer.current), []);
+  return (
+    <button
+      type="button"
+      className={`px-btn small ghost holdbtn${on ? ' on' : ''}`}
+      aria-label={`${label} (segure 2 segundos)`}
+      title={`${label}: segure 2 segundos`}
+      onPointerDown={(e) => {
+        e.stopPropagation();
+        start();
+      }}
+      onPointerUp={stop}
+      onPointerLeave={stop}
+      onPointerCancel={stop}
+      onContextMenu={(e) => e.preventDefault()}
+      onKeyDown={(e) => {
+        if ((e.key === 'Enter' || e.key === ' ') && !e.repeat) {
+          e.preventDefault();
+          start();
+        }
+      }}
+      onKeyUp={stop}
+      onBlur={stop}
+    >
+      <span className="holdfill" aria-hidden />
+      <span className="holdlabel">{children}</span>
+    </button>
+  );
+}
+
 const store = {
   get<T>(k: string, fallback: T): T {
     try {
@@ -363,15 +411,25 @@ export default function App() {
     if (sound) sfx.blip();
     try { navigator.vibrate?.(15); } catch { /* sem vibração */ }
   };
+  const moveFav = (id: number, dir: -1 | 1) =>
+    setFavs((all) => {
+      const i = all.findIndex((x) => x.id === id);
+      const j = i + dir;
+      if (i < 0 || j < 0 || j >= all.length) return all;
+      const next = [...all];
+      [next[i], next[j]] = [next[j], next[i]];
+      return next;
+    });
+
   const favManager = (
     <>
       <h2 style={{ color: 'var(--pink)' }}>♥ Favoritas</h2>
-      <p className="blurb">Suas rolagens salvas. Toque numa para rolar na hora; ✎ muda o nome.</p>
+      <p className="blurb">Suas rolagens salvas. Toque numa para rolar na hora. ▲▼ muda a ordem, ✎ o nome, e ✕ apaga se você segurar 2s.</p>
       {favs.length === 0 ? (
         <p className="small muted">Nenhuma ainda. Escolha um sistema, ajuste a rolagem e toque no ♡ no canto da tela.</p>
       ) : (
         <ol className="favlist">
-          {favs.map((f) => {
+          {favs.map((f, idx) => {
             const s = SYSTEMS.find((x) => x.id === f.system);
             return (
               <li key={f.id} className={`fav-row${selFav === f.id ? ' sel' : ''}`}>
@@ -399,8 +457,12 @@ export default function App() {
                     </span>
                   </button>
                 )}
+                <span className="reorder">
+                  <button type="button" className="px-btn small ghost" aria-label="Subir" title="Subir" disabled={idx === 0} onClick={() => moveFav(f.id, -1)}>▲</button>
+                  <button type="button" className="px-btn small ghost" aria-label="Descer" title="Descer" disabled={idx === favs.length - 1} onClick={() => moveFav(f.id, 1)}>▼</button>
+                </span>
                 <button type="button" className="px-btn small ghost" aria-label="Renomear" title="Renomear" onClick={() => setRenaming(f.id)}>✎</button>
-                <button type="button" className="px-btn small ghost" aria-label="Remover favorita" title="Remover" onClick={() => setFavs((all) => all.filter((x) => x.id !== f.id))}>✕</button>
+                <HoldButton label="Apagar favorita" onHold={() => setFavs((all) => all.filter((x) => x.id !== f.id))}>✕</HoldButton>
               </li>
             );
           })}

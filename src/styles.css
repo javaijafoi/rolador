@@ -432,3 +432,12 @@ h1 { font-family: var(--pixel); font-size: clamp(20px, 4vw, 30px); margin: 0; co
 .favchip { flex: none; font-size: 20px; padding: 10px 14px; color: var(--white); background: #12162c; --edge: var(--pink); }
 .favchip.on { background: var(--pink); color: var(--black); }
 @media (min-width: 821px) { .favchips { display: none; } }
+
+/* apagar segurando + reordenar */
+.holdbtn { position: relative; overflow: hidden; min-width: 40px; touch-action: none; user-select: none; -webkit-user-select: none; }
+.holdfill { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: var(--red); }
+.holdbtn.on .holdfill { width: 100%; transition: width 2s linear; }
+.holdlabel { position: relative; z-index: 1; }
+.reorder { display: flex; flex-direction: column; gap: 2px; flex: none; }
+.reorder .px-btn { padding: 2px 8px; font-size: 8px; margin: 2px var(--px); }
+.reorder .px-btn:disabled { opacity: 0.25; cursor: default; }
