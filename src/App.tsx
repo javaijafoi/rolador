@@ -121,6 +121,7 @@ export default function App() {
   const [sound, setSound] = useState<boolean>(() => store.get('sound', true));
   const [rollKey, setRollKey] = useState(0);
   const timer = useRef<number>();
+  const [drawer, setDrawer] = useState<null | 'config' | 'log'>(null);
 
   const system = SYSTEMS.find((s) => s.id === sysId) ?? SYSTEMS[0];
   const values: Values = useMemo(() => ({ ...defaults(system), ...(allValues[system.id] ?? {}) }), [system, allValues]);
@@ -176,6 +177,13 @@ export default function App() {
     return () => window.removeEventListener('keydown', onKey);
   }, [doRoll]);
 
+  useEffect(() => {
+    if (!drawer) return;
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setDrawer(null);
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [drawer]);
+
   const pickSystem = (id: string) => {
     setSysId(id);
     setResult(null);
@@ -184,6 +192,14 @@ export default function App() {
   };
 
   const exprStats = system.id === 'livre' ? stats(String(values.expr)) : null;
+  const summary = system.fields
+    .filter((f) => f.type !== 'text')
+    .map((f) => {
+      const v = values[f.key];
+      if (f.type === 'select') return f.options.find((o) => o.value === v)?.label ?? String(v);
+      return `${f.label.split(/[ (]/)[0]} ${v}`;
+    })
+    .join(' · ');
 
   return (
     <div className="app">
@@ -214,13 +230,15 @@ export default function App() {
       </nav>
 
       <main className="grid">
-        <section className="panel config" aria-label="Configurar rolagem">
+        <section className={`panel config sheet${drawer === 'config' ? ' open' : ''}`} aria-label="Configurar rolagem">
+          <button type="button" className="px-btn small sheet-close" onClick={() => setDrawer(null)}>FECHAR ▼</button>
           <h2 style={{ color: system.color }}>{system.name}</h2>
           <p className="blurb">{system.blurb}</p>
 
           <form
             onSubmit={(e) => {
               e.preventDefault();
+              setDrawer(null);
               doRoll();
             }}
           >
@@ -332,7 +350,8 @@ export default function App() {
           )}
         </section>
 
-        <section className="panel log" aria-label="Histórico">
+        <section className={`panel log sheet${drawer === 'log' ? ' open' : ''}`} aria-label="Histórico">
+          <button type="button" className="px-btn small sheet-close" onClick={() => setDrawer(null)}>FECHAR ▼</button>
           <div className="log-head">
             <h2>Histórico</h2>
             {history.length > 0 && (
@@ -355,6 +374,7 @@ export default function App() {
                         if (!s) return;
                         setSysId(s.id);
                         setAllValues((prev) => ({ ...prev, [s.id]: h.values }));
+                        setDrawer(null);
                         doRoll(s, h.values);
                       }}
                     >
@@ -369,6 +389,38 @@ export default function App() {
           )}
         </section>
       </main>
+
+      {drawer && <div className="backdrop" onClick={() => setDrawer(null)} />}
+
+      <div className="mbar">
+        {system.id === 'livre' ? (
+          <input
+            className="expr mexpr"
+            type="text"
+            spellCheck={false}
+            autoCapitalize="off"
+            autoComplete="off"
+            aria-label="Rolagem"
+            value={String(values.expr)}
+            placeholder="2d6+3"
+            onChange={(e) => setValue('expr', e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && doRoll()}
+          />
+        ) : (
+          <button type="button" className="msum" onClick={() => setDrawer('config')} aria-label="Abrir ajustes">
+            <span className="msum-name" style={{ color: system.color }}>{system.short}</span>
+            <span className="msum-txt">{summary}</span>
+            <span className="msum-edit">editar ▲</span>
+          </button>
+        )}
+        <div className="mbtns">
+          <button type="button" className="px-btn small" onClick={() => setDrawer('config')}>⚙ AJUSTES</button>
+          <button type="button" className="px-btn roll" disabled={rolling} onClick={() => doRoll()}>
+            {rolling ? '...' : '▶ ROLAR'}
+          </button>
+          <button type="button" className="px-btn small" onClick={() => setDrawer('log')}>☰ HIST.</button>
+        </div>
+      </div>
 
       <footer className="foot">
         <span>aleatoriedade via crypto.getRandomValues · nada sai do seu navegador</span>
