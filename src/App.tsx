@@ -754,7 +754,15 @@ export default function App() {
       </div>
 
       <footer className="foot">
-        <span>aleatoriedade via crypto.getRandomValues · nada sai do seu navegador</span>
+        <span className="sign">
+          feito por{' '}
+          <a href="https://github.com/javaijafoi" target="_blank" rel="noopener noreferrer">@javaijafoi</a>
+          {' · '}
+          <a href="https://fantasy-portfolio-zeta.vercel.app" target="_blank" rel="noopener noreferrer">portfólio</a>
+          {' · '}
+          <a href="https://github.com/javaijafoi/rolador" target="_blank" rel="noopener noreferrer">código</a>
+        </span>
+        <span className="privacy">aleatoriedade via crypto.getRandomValues · nada sai do seu navegador</span>
       </footer>
     </div>
   );
