@@ -38,7 +38,7 @@ function favKey(sys: GameSystem, vals: Values): string {
   return `${sys.id}|${JSON.stringify(norm)}`;
 }
 
-const DELETE_HOLD_MS = 2000;
+const DELETE_HOLD_MS = 1000;
 
 /** Botão que só dispara depois de segurar por 2s, com barra enchendo. */
 function HoldButton({ onHold, label, children }: { onHold: () => void; label: string; children: React.ReactNode }) {
@@ -61,8 +61,8 @@ function HoldButton({ onHold, label, children }: { onHold: () => void; label: st
     <button
       type="button"
       className={`px-btn small ghost holdbtn${on ? ' on' : ''}`}
-      aria-label={`${label} (segure 2 segundos)`}
-      title={`${label}: segure 2 segundos`}
+      aria-label={`${label} (segure 1 segundo)`}
+      title={`${label}: segure 1 segundo`}
       onPointerDown={(e) => {
         e.stopPropagation();
         start();
@@ -424,7 +424,7 @@ export default function App() {
   const favManager = (
     <>
       <h2 style={{ color: 'var(--pink)' }}>♥ Favoritas</h2>
-      <p className="blurb">Suas rolagens salvas. Toque numa para rolar na hora. ▲▼ muda a ordem, ✎ o nome, e ✕ apaga se você segurar 2s.</p>
+      <p className="blurb">Suas rolagens salvas. Toque numa para rolar na hora. ▲▼ muda a ordem, ✎ o nome, e ✕ apaga se você segurar 1s.</p>
       {favs.length === 0 ? (
         <p className="small muted">Nenhuma ainda. Escolha um sistema, ajuste a rolagem e toque no ♡ no canto da tela.</p>
       ) : (
