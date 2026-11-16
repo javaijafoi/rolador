@@ -389,3 +389,8 @@ h1 { font-family: var(--pixel); font-size: clamp(20px, 4vw, 30px); margin: 0; co
   .headline { font-size: 13px; }
 }
 @media (max-width: 820px) { .mbtns .px-btn:not(.roll) { white-space: nowrap; font-size: 8px; padding-left: 2px; padding-right: 2px; } }
+
+/* dica de toque na tela */
+.screen { cursor: pointer; user-select: none; -webkit-user-select: none; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+.screen-hint { position: absolute; left: 0; right: 0; bottom: 8px; margin: 0; z-index: 1; color: var(--lavender); font-size: 17px; opacity: 0.85; pointer-events: none; }
+.screen:hover .screen-hint { color: var(--white); }

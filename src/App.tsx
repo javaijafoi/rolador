@@ -122,6 +122,7 @@ export default function App() {
   const [rollKey, setRollKey] = useState(0);
   const timer = useRef<number>();
   const [drawer, setDrawer] = useState<null | 'config' | 'log'>(null);
+  const tapTimer = useRef<number>();
 
   const system = SYSTEMS.find((s) => s.id === sysId) ?? SYSTEMS[0];
   const values: Values = useMemo(() => ({ ...defaults(system), ...(allValues[system.id] ?? {}) }), [system, allValues]);
@@ -183,6 +184,17 @@ export default function App() {
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [drawer]);
+
+  // Toque simples na tela abre os ajustes; toque duplo rola.
+  const onScreenClick = (e: React.MouseEvent) => {
+    window.clearTimeout(tapTimer.current);
+    if (e.detail >= 2) {
+      setDrawer(null);
+      doRoll();
+      return;
+    }
+    tapTimer.current = window.setTimeout(() => setDrawer('config'), 260);
+  };
 
   const pickSystem = (id: string) => {
     setSysId(id);
@@ -321,7 +333,12 @@ export default function App() {
           </form>
         </section>
 
-        <section className={`panel screen tone-${result && !rolling ? result.tone : 'idle'}`} aria-live="polite" aria-label="Resultado">
+        <section
+          className={`panel screen tone-${result && !rolling ? result.tone : 'idle'}`}
+          aria-live="polite"
+          aria-label="Resultado. Toque uma vez para abrir os ajustes, duas vezes para rolar"
+          onClick={onScreenClick}
+        >
           {error && <p className="error">⚠ {error}</p>}
           {!result && !error && (
             <div className="idle">
@@ -329,6 +346,7 @@ export default function App() {
               <p className="small">escolha o sistema e role</p>
             </div>
           )}
+          <p className="screen-hint">toque 2x = rolar · toque 1x = ajustes</p>
           {result && (
             <div className="result" key={rollKey}>
               <div className="groups">
