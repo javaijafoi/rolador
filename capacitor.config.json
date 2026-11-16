@@ -1,0 +1,7 @@
+{
+  "appId": "com.javaijafoi.rolador",
+  "appName": "Rolador",
+  "webDir": "dist",
+  "backgroundColor": "#0c0f1f",
+  "android": { "allowMixedContent": false }
+}

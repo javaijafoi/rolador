@@ -46,4 +46,15 @@ npm test
 npm run build
 ```
 
+## App Android (APK)
+
+O app web é empacotado com [Capacitor](https://capacitorjs.com), sem depender de internet (fontes e código vão dentro do APK).
+
+```sh
+npm install
+npm run apk   # gera android/app/build/outputs/apk/debug/app-debug.apk
+```
+
+Precisa de JDK 17+ e do Android SDK (`ANDROID_HOME`). O APK sai assinado com a chave de debug: serve para instalar direto no celular (permita "instalar apps desconhecidos"). Para atualizar, instale por cima um APK gerado na mesma máquina; se vier de outra, desinstale antes.
+
 Começou como um fork do [dice-roller do SeanMcP](https://github.com/SeanMcP/dice-roller); esta versão foi reescrita do zero.

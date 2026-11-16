@@ -1,8 +1,8 @@
 // Cache offline: o app abre sem internet depois da primeira visita.
-const CACHE = 'rolador-v1';
+const CACHE = 'rolador-v2';
 
 self.addEventListener('install', (e) => {
-  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(['/', '/manifest.webmanifest', '/icon.svg'])).then(() => self.skipWaiting()));
+  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(['/', '/manifest.webmanifest', '/icon.svg', '/fonts/press-start-2p.woff2', '/fonts/vt323.woff2'])).then(() => self.skipWaiting()));
 });
 
 self.addEventListener('activate', (e) => {

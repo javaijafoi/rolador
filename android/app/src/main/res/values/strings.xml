@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Rolador</string>
+    <string name="title_activity_main">Rolador</string>
+    <string name="package_name">com.javaijafoi.rolador</string>
+    <string name="custom_url_scheme">com.javaijafoi.rolador</string>
+</resources>
