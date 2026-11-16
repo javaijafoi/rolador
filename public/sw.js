@@ -1,5 +1,5 @@
 // Cache offline: o app abre sem internet depois da primeira visita.
-const CACHE = 'rolador-v2';
+const CACHE = 'rolador-v3';
 
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(['/', '/manifest.webmanifest', '/icon.svg', '/fonts/press-start-2p.woff2', '/fonts/vt323.woff2'])).then(() => self.skipWaiting()));
@@ -17,9 +17,12 @@ self.addEventListener('fetch', (e) => {
   const url = new URL(req.url);
   const okHost = url.origin === self.location.origin || url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com';
   if (!okHost) return;
+  if (url.pathname === '/version.json') return; // sempre da rede
+  if (url.pathname.endsWith('.apk')) return; // download direto, sem cache
 
   // Página: tenta a rede (pega versão nova) e cai para o cache sem internet.
   if (req.mode === 'navigate') {
+    if (url.pathname !== '/') return; // só a página inicial usa o cache de navegação
     e.respondWith(
       fetch(req)
         .then((res) => {

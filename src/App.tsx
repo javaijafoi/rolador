@@ -38,6 +38,32 @@ function favKey(sys: GameSystem, vals: Values): string {
   return `${sys.id}|${JSON.stringify(norm)}`;
 }
 
+const isAndroidApp = typeof window !== 'undefined' && 'Capacitor' in window;
+const BUILD_ID = typeof __BUILD_ID__ === 'string' ? __BUILD_ID__ : 'dev';
+
+async function fetchLatestId(): Promise<string | null> {
+  try {
+    const r = await fetch(`/version.json?t=${Date.now()}`, { cache: 'no-store' });
+    if (!r.ok) return null;
+    const j = (await r.json()) as { id?: string };
+    return j.id ?? null;
+  } catch {
+    return null; // sem internet
+  }
+}
+
+async function applyUpdate() {
+  try {
+    const regs = await navigator.serviceWorker?.getRegistrations();
+    await Promise.all((regs ?? []).map((r) => r.unregister()));
+    const keys = await caches?.keys();
+    await Promise.all((keys ?? []).map((k) => caches.delete(k)));
+  } catch {
+    /* segue e recarrega mesmo assim */
+  }
+  window.location.reload();
+}
+
 const DELETE_HOLD_MS = 1000;
 
 /** Botão que só dispara depois de segurar por 2s, com barra enchendo. */
@@ -200,6 +226,33 @@ export default function App() {
   const [selFav, setSelFav] = useState<number | null>(() => store.get('selFav', null));
   const [favs, setFavs] = useState<Favorite[]>(() => store.get('favs', []));
   const [renaming, setRenaming] = useState<number | null>(null);
+  const [newVersion, setNewVersion] = useState(false);
+  const [updMsg, setUpdMsg] = useState<string | null>(null);
+
+  const checkUpdate = useCallback(async (manual = false) => {
+    if (manual) setUpdMsg('procurando...');
+    const latest = await fetchLatestId();
+    if (latest === null) {
+      if (manual) setUpdMsg('sem conexão');
+    } else if (BUILD_ID !== 'dev' && latest !== BUILD_ID) {
+      setNewVersion(true);
+      if (manual) setUpdMsg(null);
+    } else if (manual) {
+      setUpdMsg('você está na última versão ✓');
+    }
+    if (manual) window.setTimeout(() => setUpdMsg(null), 3500);
+  }, []);
+
+  useEffect(() => {
+    void checkUpdate();
+    const onVisible = () => document.visibilityState === 'visible' && void checkUpdate();
+    document.addEventListener('visibilitychange', onVisible);
+    const id = window.setInterval(() => void checkUpdate(), 30 * 60 * 1000);
+    return () => {
+      document.removeEventListener('visibilitychange', onVisible);
+      window.clearInterval(id);
+    };
+  }, [checkUpdate]);
   const [holding, setHolding] = useState(false);
   const [shakeOn, setShakeOn] = useState(false);
   const hold = useRef<{ timer?: number; fired: boolean; x: number; y: number; t: number; moved: boolean }>({ fired: false, x: 0, y: 0, t: 0, moved: false });
@@ -473,10 +526,19 @@ export default function App() {
 
   return (
     <div className="app">
+      {newVersion && (
+        <div className="update-banner" role="status">
+          <span>✦ nova versão disponível</span>
+          <button type="button" className="px-btn small on" onClick={() => void applyUpdate()}>ATUALIZAR</button>
+        </div>
+      )}
       <header className="top">
         <div className="logo">
           <span className="logo-die" aria-hidden>▣</span>
-          <h1>ROLADOR<span className="cursor">_</span></h1>
+          <div className="brand">
+            <h1>ROLADOR<span className="cursor">_</span></h1>
+            <span className="by">by javaijafoi</span>
+          </div>
         </div>
         <p className="tag">dados para qualquer mesa</p>
         {canShake && (
@@ -755,12 +817,22 @@ export default function App() {
 
       <footer className="foot">
         <span className="sign">
-          feito por{' '}
+          por{' '}
           <a href="https://github.com/javaijafoi" target="_blank" rel="noopener noreferrer">@javaijafoi</a>
           {' · '}
           <a href="https://fantasy-portfolio-zeta.vercel.app" target="_blank" rel="noopener noreferrer">portfólio</a>
           {' · '}
           <a href="https://github.com/javaijafoi/rolador" target="_blank" rel="noopener noreferrer">código</a>
+          {!isAndroidApp && (
+            <>
+              {' · '}
+              <a href="/rolador.apk" download className="apk-link" title="Baixar o app para Android">⬇ APK</a>
+            </>
+          )}
+          {' · '}
+          <button type="button" className="upd-btn" onClick={() => void checkUpdate(true)} title="Procurar nova versão">
+            ↻ {updMsg ?? `v${BUILD_ID}`}
+          </button>
         </span>
         <span className="privacy">aleatoriedade via crypto.getRandomValues · nada sai do seu navegador</span>
       </footer>

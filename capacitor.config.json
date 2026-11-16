@@ -3,5 +3,12 @@
   "appName": "Rolador",
   "webDir": "dist",
   "backgroundColor": "#0c0f1f",
-  "android": { "allowMixedContent": false }
+  "android": {
+    "allowMixedContent": false
+  },
+  "server": {
+    "url": "https://rolador-javaijafoi.vercel.app",
+    "cleartext": false,
+    "androidScheme": "https"
+  }
 }
