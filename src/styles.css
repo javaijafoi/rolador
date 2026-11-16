@@ -405,3 +405,16 @@ h1 { font-family: var(--pixel); font-size: clamp(20px, 4vw, 30px); margin: 0; co
   .top .cursor { display: none; }
   .logo { gap: 6px; }
 }
+
+/* coração, abas e favoritas */
+.heart { position: absolute; top: 6px; right: 8px; z-index: 3; background: transparent; border: 0; color: var(--pink); font-family: var(--pixel); font-size: 26px; line-height: 1; padding: 8px 10px; cursor: pointer; text-shadow: 2px 2px 0 var(--black); }
+.heart.on { color: var(--red); animation: pop 0.2s steps(3) 1; }
+.heart:hover { color: var(--white); }
+.heart:focus-visible { outline: 3px solid var(--yellow); outline-offset: 2px; }
+.tabs { display: flex; gap: 4px; margin-bottom: 10px; flex-wrap: wrap; }
+.fav-row { display: flex; align-items: center; gap: 4px; }
+.fav-row .log-item { flex: 1; min-width: 0; grid-template-columns: 70px 1fr; }
+.fav-row .px-btn { flex: none; padding: 6px 8px; }
+.fav-name { flex: 1; min-width: 0; background: var(--black); color: var(--green); border: 0; box-shadow: 0 0 0 var(--px) var(--green); font-family: var(--term); font-size: 20px; padding: 6px 8px; margin: var(--px); }
+.log-head .small { margin: 0; }
+.log h2 { display: none; }
