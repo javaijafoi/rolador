@@ -30,6 +30,7 @@ const store = {
   },
 };
 
+const HOLD_MS = 2000;
 const QUICK_DICE = ['d4', 'd6', 'd8', 'd10', 'd12', 'd20', 'd100', 'dF'];
 const PRESETS: { label: string; expr: string }[] = [
   { label: 'Atributo 4d6kh3', expr: '4d6kh3' },
@@ -122,7 +123,11 @@ export default function App() {
   const [rollKey, setRollKey] = useState(0);
   const timer = useRef<number>();
   const [drawer, setDrawer] = useState<null | 'config' | 'log'>(null);
-  const tapTimer = useRef<number>();
+  const [holding, setHolding] = useState(false);
+  const [shakeOn, setShakeOn] = useState(false);
+  const hold = useRef<{ timer?: number; fired: boolean; x: number; y: number; t: number; moved: boolean }>({ fired: false, x: 0, y: 0, t: 0, moved: false });
+  const rollRef = useRef<() => void>(() => {});
+  const canShake = typeof window !== 'undefined' && 'DeviceMotionEvent' in window && window.matchMedia?.('(pointer: coarse)').matches;
 
   const system = SYSTEMS.find((s) => s.id === sysId) ?? SYSTEMS[0];
   const values: Values = useMemo(() => ({ ...defaults(system), ...(allValues[system.id] ?? {}) }), [system, allValues]);
@@ -185,15 +190,106 @@ export default function App() {
     return () => window.removeEventListener('keydown', onKey);
   }, [drawer]);
 
-  // Toque simples na tela abre os ajustes; toque duplo rola.
-  const onScreenClick = (e: React.MouseEvent) => {
-    window.clearTimeout(tapTimer.current);
-    if (e.detail >= 2) {
+  // Rolar mantendo pressionado 2s, ou chacoalhando o celular. Toque curto abre os ajustes.
+  useEffect(() => {
+    rollRef.current = () => {
       setDrawer(null);
       doRoll();
+      try { navigator.vibrate?.(40); } catch { /* sem vibração */ }
+    };
+  });
+
+  const cancelHold = () => {
+    window.clearTimeout(hold.current.timer);
+    setHolding(false);
+  };
+  const onScreenDown = (e: React.PointerEvent) => {
+    if (e.button !== 0 && e.pointerType === 'mouse') return;
+    const h = hold.current;
+    h.fired = false; h.moved = false; h.x = e.clientX; h.y = e.clientY; h.t = Date.now();
+    setHolding(true);
+    window.clearTimeout(h.timer);
+    h.timer = window.setTimeout(() => {
+      h.fired = true;
+      setHolding(false);
+      rollRef.current();
+    }, HOLD_MS);
+  };
+  const onScreenMove = (e: React.PointerEvent) => {
+    const h = hold.current;
+    if (!h.moved && Math.hypot(e.clientX - h.x, e.clientY - h.y) > 14) {
+      h.moved = true;
+      cancelHold();
+    }
+  };
+  const onScreenUp = () => {
+    const h = hold.current;
+    const wasHolding = !h.fired && !h.moved && h.t > 0;
+    cancelHold();
+    if (wasHolding && Date.now() - h.t < 500) setDrawer('config');
+    h.t = 0;
+  };
+
+  // Chacoalhar: duas sacudidas fortes em menos de 0,8 s.
+  useEffect(() => {
+    if (!shakeOn) return;
+    let last: [number, number, number] | null = null;
+    let spikes: number[] = [];
+    let cooldown = 0;
+    const onMotion = (e: DeviceMotionEvent) => {
+      const a = e.accelerationIncludingGravity;
+      if (!a || a.x == null || a.y == null || a.z == null) return;
+      const cur: [number, number, number] = [a.x, a.y, a.z];
+      if (last) {
+        const delta = Math.abs(cur[0] - last[0]) + Math.abs(cur[1] - last[1]) + Math.abs(cur[2] - last[2]);
+        const now = Date.now();
+        if (delta > 28 && now > cooldown) {
+          spikes = [...spikes.filter((t) => now - t < 800), now];
+          if (spikes.length >= 2) {
+            spikes = [];
+            cooldown = now + 1500;
+            rollRef.current();
+          }
+        }
+      }
+      last = cur;
+    };
+    window.addEventListener('devicemotion', onMotion);
+    return () => window.removeEventListener('devicemotion', onMotion);
+  }, [shakeOn]);
+
+  useEffect(() => {
+    // Religa sozinho se estava ligado. No iOS o pedido de permissão exige um toque, então falha em silêncio.
+    if (!canShake || !store.get('shake', false)) return;
+    const DM = (window as unknown as { DeviceMotionEvent: { requestPermission?: () => Promise<string> } }).DeviceMotionEvent;
+    if (typeof DM.requestPermission !== 'function') {
+      setShakeOn(true);
       return;
     }
-    tapTimer.current = window.setTimeout(() => setDrawer('config'), 260);
+    DM.requestPermission().then((r) => r === 'granted' && setShakeOn(true)).catch(() => {});
+  }, [canShake]);
+
+  const toggleShake = async () => {
+    if (shakeOn) {
+      setShakeOn(false);
+      store.set('shake', false);
+      return;
+    }
+    const DM = (window as unknown as { DeviceMotionEvent: { requestPermission?: () => Promise<string> } }).DeviceMotionEvent;
+    try {
+      if (typeof DM.requestPermission === 'function') {
+        const r = await DM.requestPermission();
+        if (r !== 'granted') {
+          setError('Sem permissão para o sensor de movimento');
+          return;
+        }
+      }
+      setShakeOn(true);
+      store.set('shake', true);
+      if (sound) sfx.blip();
+    } catch {
+      setError('Este aparelho não deixou usar o sensor de movimento');
+    }
   };
 
   const pickSystem = (id: string) => {
@@ -221,6 +317,11 @@ export default function App() {
           <h1>ROLADOR<span className="cursor">_</span></h1>
         </div>
         <p className="tag">dados para qualquer mesa</p>
+        {canShake && (
+          <button type="button" className={`px-btn small${shakeOn ? ' on' : ' ghost'}`} onClick={toggleShake} aria-pressed={shakeOn}>
+            ≋ CHACOALHAR
+          </button>
+        )}
         <button type="button" className="px-btn small ghost" onClick={() => setSound((s) => !s)} aria-pressed={sound}>
           {sound ? '♪ SOM' : '♪ MUDO'}
         </button>
@@ -336,8 +437,13 @@ export default function App() {
         <section
           className={`panel screen tone-${result && !rolling ? result.tone : 'idle'}`}
           aria-live="polite"
-          aria-label="Resultado. Toque uma vez para abrir os ajustes, duas vezes para rolar"
-          onClick={onScreenClick}
+          aria-label="Resultado. Toque para abrir os ajustes; segure por 2 segundos ou chacoalhe para rolar"
+          onPointerDown={onScreenDown}
+          onPointerMove={onScreenMove}
+          onPointerUp={onScreenUp}
+          onPointerCancel={cancelHold}
+          onPointerLeave={cancelHold}
+          onContextMenu={(e) => e.preventDefault()}
         >
           {error && <p className="error">⚠ {error}</p>}
           {!result && !error && (
@@ -346,7 +452,10 @@ export default function App() {
               <p className="small">escolha o sistema e role</p>
             </div>
           )}
-          <p className="screen-hint">toque 2x = rolar · toque 1x = ajustes</p>
+          <div className={`hold-bar${holding ? ' on' : ''}`} aria-hidden />
+          <p className="screen-hint">
+            segure 2s{shakeOn ? ' ou chacoalhe' : ''} = rolar · toque = ajustes
+          </p>
           {result && (
             <div className="result" key={rollKey}>
               <div className="groups">

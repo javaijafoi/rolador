@@ -394,3 +394,14 @@ h1 { font-family: var(--pixel); font-size: clamp(20px, 4vw, 30px); margin: 0; co
 .screen { cursor: pointer; user-select: none; -webkit-user-select: none; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
 .screen-hint { position: absolute; left: 0; right: 0; bottom: 8px; margin: 0; z-index: 1; color: var(--lavender); font-size: 17px; opacity: 0.85; pointer-events: none; }
 .screen:hover .screen-hint { color: var(--white); }
+
+/* barra de carga do "segurar 2s" */
+.hold-bar { position: absolute; left: 0; bottom: 0; height: 8px; width: 0; background: var(--yellow); z-index: 2; pointer-events: none; }
+.hold-bar.on { width: 100%; transition: width 2s linear; }
+@media (max-width: 820px) { .top .px-btn { margin-left: 0; } .top .px-btn:last-child { margin-left: auto; } .top { flex-wrap: wrap; } .top .tag { display: none; } }
+@media (max-width: 820px) {
+  .top { flex-wrap: nowrap; gap: 6px; }
+  .top .px-btn { font-size: 8px; padding: 8px 6px; white-space: nowrap; }
+  .top .cursor { display: none; }
+  .logo { gap: 6px; }
+}
