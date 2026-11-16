@@ -56,7 +56,7 @@ const store = {
   },
 };
 
-const HOLD_MS = 2000;
+const HOLD_MS = 1000;
 const QUICK_DICE = ['d4', 'd6', 'd8', 'd10', 'd12', 'd20', 'd100', 'dF'];
 const PRESETS: { label: string; expr: string }[] = [
   { label: 'Atributo 4d6kh3', expr: '4d6kh3' },
@@ -149,7 +149,7 @@ export default function App() {
   const [rollKey, setRollKey] = useState(0);
   const timer = useRef<number>();
   const [drawer, setDrawer] = useState<null | 'config' | 'log'>(null);
-  const [listTab, setListTab] = useState<'hist' | 'fav'>('hist');
+  const [selFav, setSelFav] = useState<number | null>(() => store.get('selFav', null));
   const [favs, setFavs] = useState<Favorite[]>(() => store.get('favs', []));
   const [renaming, setRenaming] = useState<number | null>(null);
   const [holding, setHolding] = useState(false);
@@ -158,6 +158,7 @@ export default function App() {
   const rollRef = useRef<() => void>(() => {});
   const canShake = typeof window !== 'undefined' && 'DeviceMotionEvent' in window && window.matchMedia?.('(pointer: coarse)').matches;
 
+  const isFav = sysId === 'fav';
   const system = SYSTEMS.find((s) => s.id === sysId) ?? SYSTEMS[0];
   const values: Values = useMemo(() => ({ ...defaults(system), ...(allValues[system.id] ?? {}) }), [system, allValues]);
 
@@ -166,6 +167,7 @@ export default function App() {
   useEffect(() => store.set('history', history.slice(0, 60)), [history]);
   useEffect(() => store.set('sound', sound), [sound]);
   useEffect(() => store.set('favs', favs), [favs]);
+  useEffect(() => store.set('selFav', selFav), [selFav]);
 
   const setValue = (k: string, v: string | number) => {
     setAllValues((prev) => ({ ...prev, [system.id]: { ...values, [k]: v } }));
@@ -201,17 +203,31 @@ export default function App() {
     [system, values, sound],
   );
 
+  const rollFav = (f: Favorite) => {
+    const s = SYSTEMS.find((x) => x.id === f.system);
+    if (!s) return;
+    setSelFav(f.id);
+    setDrawer(null);
+    doRoll(s, { ...defaults(s), ...f.values });
+  };
+  const rollCurrent = () => {
+    if (!isFav) return doRoll();
+    const f = favs.find((x) => x.id === selFav) ?? favs[0];
+    if (f) rollFav(f);
+    else setError('Nenhuma favorita ainda. Escolha um sistema e toque no ♡');
+  };
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const tag = (e.target as HTMLElement)?.tagName;
       if (e.key === ' ' && tag !== 'INPUT' && tag !== 'SELECT' && tag !== 'BUTTON') {
         e.preventDefault();
-        doRoll();
+        rollRef.current();
       }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [doRoll]);
+  }, []);
 
   useEffect(() => {
     if (!drawer) return;
@@ -220,11 +236,11 @@ export default function App() {
     return () => window.removeEventListener('keydown', onKey);
   }, [drawer]);
 
-  // Rolar mantendo pressionado 2s, ou chacoalhando o celular. Toque curto abre os ajustes.
+  // Rolar mantendo pressionado 1s, ou chacoalhando o celular. Toque curto abre os ajustes.
   useEffect(() => {
     rollRef.current = () => {
       setDrawer(null);
-      doRoll();
+      rollCurrent();
       try { navigator.vibrate?.(40); } catch { /* sem vibração */ }
     };
   });
@@ -256,7 +272,7 @@ export default function App() {
     const h = hold.current;
     const wasHolding = !h.fired && !h.moved && h.t > 0;
     cancelHold();
-    if (wasHolding && Date.now() - h.t < 500) setDrawer('config');
+    if (wasHolding && Date.now() - h.t < 300) setDrawer('config');
     h.t = 0;
   };
 
@@ -340,16 +356,58 @@ export default function App() {
     if (currentFav) {
       setFavs((f) => f.filter((x) => x.id !== currentFav.id));
     } else {
-      const name = system.id === 'livre' ? summary : `${system.short} · ${summary}`;
-      setFavs((f) => [{ id: Date.now(), system: system.id, values: { ...values }, name }, ...f]);
+      const used = favs.map((x) => /^Fav(\d+)$/.exec(x.name)).filter(Boolean).map((m) => Number(m![1]));
+      const name = `Fav${String(Math.max(0, ...used) + 1).padStart(2, '0')}`;
+      setFavs((f) => [...f, { id: Date.now(), system: system.id, values: { ...values }, name }]);
     }
     if (sound) sfx.blip();
     try { navigator.vibrate?.(15); } catch { /* sem vibração */ }
   };
-  const openList = (tab: 'hist' | 'fav') => {
-    setListTab(tab);
-    setDrawer('log');
-  };
+  const favManager = (
+    <>
+      <h2 style={{ color: 'var(--pink)' }}>♥ Favoritas</h2>
+      <p className="blurb">Suas rolagens salvas. Toque numa para rolar na hora; ✎ muda o nome.</p>
+      {favs.length === 0 ? (
+        <p className="small muted">Nenhuma ainda. Escolha um sistema, ajuste a rolagem e toque no ♡ no canto da tela.</p>
+      ) : (
+        <ol className="favlist">
+          {favs.map((f) => {
+            const s = SYSTEMS.find((x) => x.id === f.system);
+            return (
+              <li key={f.id} className={`fav-row${selFav === f.id ? ' sel' : ''}`}>
+                {renaming === f.id ? (
+                  <input
+                    className="fav-name"
+                    autoFocus
+                    defaultValue={f.name}
+                    maxLength={40}
+                    aria-label="Nome da favorita"
+                    onFocus={(e) => e.target.select()}
+                    onBlur={(e) => {
+                      const name = e.target.value.trim() || f.name;
+                      setFavs((all) => all.map((x) => (x.id === f.id ? { ...x, name } : x)));
+                      setRenaming(null);
+                    }}
+                    onKeyDown={(e) => e.key === 'Enter' && (e.target as HTMLInputElement).blur()}
+                  />
+                ) : (
+                  <button type="button" className="log-item fav-item" title="Rolar" onClick={() => rollFav(f)}>
+                    <span className="log-sys" style={{ color: s?.color }}>{s?.short ?? f.system}</span>
+                    <span className="fav-text">
+                      <span className="log-sum">{f.name}</span>
+                      <span className="fav-sub">{s ? describe(s, f.values) : ''}</span>
+                    </span>
+                  </button>
+                )}
+                <button type="button" className="px-btn small ghost" aria-label="Renomear" title="Renomear" onClick={() => setRenaming(f.id)}>✎</button>
+                <button type="button" className="px-btn small ghost" aria-label="Remover favorita" title="Remover" onClick={() => setFavs((all) => all.filter((x) => x.id !== f.id))}>✕</button>
+              </li>
+            );
+          })}
+        </ol>
+      )}
+    </>
+  );
 
   return (
     <div className="app">
@@ -374,7 +432,7 @@ export default function App() {
           <button
             key={s.id}
             type="button"
-            className={`cart${s.id === system.id ? ' active' : ''}`}
+            className={`cart${!isFav && s.id === system.id ? ' active' : ''}`}
             style={{ ['--c' as string]: s.color }}
             onClick={() => pickSystem(s.id)}
             title={s.name}
@@ -382,11 +440,22 @@ export default function App() {
             <span className="cart-label">{s.short}</span>
           </button>
         ))}
+        <button
+          type="button"
+          className={`cart cart-fav${isFav ? ' active' : ''}`}
+          style={{ ['--c' as string]: '#ff77a8' }}
+          onClick={() => pickSystem('fav')}
+          title="Favoritas"
+        >
+          <span className="cart-label">♥ FAV</span>
+        </button>
       </nav>
 
       <main className="grid">
         <section className={`panel config sheet${drawer === 'config' ? ' open' : ''}`} aria-label="Configurar rolagem">
           <button type="button" className="px-btn small sheet-close" onClick={() => setDrawer(null)}>FECHAR ▼</button>
+          {isFav ? favManager : (
+            <>
           <h2 style={{ color: system.color }}>{system.name}</h2>
           <p className="blurb">{system.blurb}</p>
 
@@ -474,12 +543,14 @@ export default function App() {
             </button>
             <p className="hint">ou aperte espaço</p>
           </form>
+            </>
+          )}
         </section>
 
         <section
           className={`panel screen tone-${result && !rolling ? result.tone : 'idle'}`}
           aria-live="polite"
-          aria-label="Resultado. Toque para editar a rolagem; segure por 2 segundos ou chacoalhe para rolar"
+          aria-label="Resultado. Toque para editar a rolagem; segure por 1 segundo ou chacoalhe para rolar"
           onPointerDown={onScreenDown}
           onPointerMove={onScreenMove}
           onPointerUp={onScreenUp}
@@ -494,7 +565,7 @@ export default function App() {
               <p className="small">escolha o sistema e role</p>
             </div>
           )}
-          <button
+          {!isFav && <button
             type="button"
             className={`heart${currentFav ? ' on' : ''}`}
             aria-pressed={!!currentFav}
@@ -508,10 +579,10 @@ export default function App() {
             }}
           >
             {currentFav ? '♥' : '♡'}
-          </button>
+          </button>}
           <div className={`hold-bar${holding ? ' on' : ''}`} aria-hidden />
           <p className="screen-hint">
-            segure 2s{shakeOn ? ' ou chacoalhe' : ''} = rolar · toque = editar
+            segure 1s{shakeOn ? ' ou chacoalhe' : ''} = rolar · toque = editar
           </p>
           {result && (
             <div className="result" key={rollKey}>
@@ -534,63 +605,10 @@ export default function App() {
           )}
         </section>
 
-        <section className={`panel log sheet${drawer === 'log' ? ' open' : ''}`} aria-label="Histórico e favoritas">
+        <section className={`panel log sheet${drawer === 'log' ? ' open' : ''}`} aria-label="Histórico">
           <button type="button" className="px-btn small sheet-close" onClick={() => setDrawer(null)}>FECHAR ▼</button>
-          <div className="tabs" role="tablist">
-            <button type="button" role="tab" aria-selected={listTab === 'fav'} className={`px-btn small${listTab === 'fav' ? ' on' : ''}`} onClick={() => setListTab('fav')}>♥ FAVORITAS {favs.length || ''}</button>
-            <button type="button" role="tab" aria-selected={listTab === 'hist'} className={`px-btn small${listTab === 'hist' ? ' on' : ''}`} onClick={() => setListTab('hist')}>☰ HISTÓRICO</button>
-          </div>
-
-          {listTab === 'fav' && (
-            favs.length === 0 ? (
-              <p className="small muted">Toque no ♡ no canto da tela para guardar a rolagem atual aqui. Fica salvo neste navegador.</p>
-            ) : (
-              <ol>
-                {favs.map((f) => {
-                  const s = SYSTEMS.find((x) => x.id === f.system);
-                  return (
-                    <li key={f.id} className="fav-row">
-                      {renaming === f.id ? (
-                        <input
-                          className="fav-name"
-                          autoFocus
-                          defaultValue={f.name}
-                          maxLength={60}
-                          aria-label="Nome da favorita"
-                          onBlur={(e) => {
-                            const name = e.target.value.trim() || f.name;
-                            setFavs((all) => all.map((x) => (x.id === f.id ? { ...x, name } : x)));
-                            setRenaming(null);
-                          }}
-                          onKeyDown={(e) => e.key === 'Enter' && (e.target as HTMLInputElement).blur()}
-                        />
-                      ) : (
-                        <button
-                          type="button"
-                          className="log-item fav-item"
-                          title="Carregar e rolar"
-                          onClick={() => {
-                            if (!s) return;
-                            setSysId(s.id);
-                            setAllValues((prev) => ({ ...prev, [s.id]: f.values }));
-                            setDrawer(null);
-                            doRoll(s, f.values);
-                          }}
-                        >
-                          <span className="log-sys" style={{ color: s?.color }}>{s?.short ?? f.system}</span>
-                          <span className="log-sum">{f.name}</span>
-                        </button>
-                      )}
-                      <button type="button" className="px-btn small ghost" aria-label="Renomear" title="Renomear" onClick={() => setRenaming(f.id)}>✎</button>
-                      <button type="button" className="px-btn small ghost" aria-label="Remover favorita" title="Remover" onClick={() => setFavs((all) => all.filter((x) => x.id !== f.id))}>✕</button>
-                    </li>
-                  );
-                })}
-              </ol>
-            )
-          )}
-
-          {listTab === 'hist' && (
+          <h2 className="list-title">☰ Histórico</h2>
+          {(
             <>
               {history.length > 0 && (
                 <div className="log-head">
@@ -635,7 +653,16 @@ export default function App() {
       {drawer && <div className="backdrop" onClick={() => setDrawer(null)} />}
 
       <div className="mbar">
-        {system.id === 'livre' ? (
+        {isFav ? (
+          <div className="favchips" role="listbox" aria-label="Favoritas">
+            {favs.length === 0 && <span className="small muted">Sem favoritas. Toque no ♡ de uma rolagem.</span>}
+            {favs.map((f) => (
+              <button key={f.id} type="button" role="option" aria-selected={selFav === f.id} className={`chip favchip${selFav === f.id ? ' on' : ''}`} onClick={() => rollFav(f)}>
+                {f.name}
+              </button>
+            ))}
+          </div>
+        ) : system.id === 'livre' ? (
           <input
             className="expr mexpr"
             type="text"
@@ -646,7 +673,7 @@ export default function App() {
             value={String(values.expr)}
             placeholder="2d6+3"
             onChange={(e) => setValue('expr', e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && doRoll()}
+            onKeyDown={(e) => e.key === 'Enter' && rollCurrent()}
           />
         ) : (
           <button type="button" className="msum" onClick={() => setDrawer('config')} aria-label="Editar rolagem">
@@ -656,11 +683,11 @@ export default function App() {
           </button>
         )}
         <div className="mbtns">
-          <button type="button" className="px-btn small" onClick={() => openList('fav')}>♥ FAVORITAS{favs.length ? ` ${Math.min(favs.length, 99)}` : ''}</button>
-          <button type="button" className="px-btn roll" disabled={rolling} onClick={() => doRoll()}>
+          <button type="button" className="px-btn small" onClick={() => (isFav ? setDrawer('config') : pickSystem('fav'))}>{isFav ? '✎ GERIR' : `♥ FAV${favs.length ? ` ${Math.min(favs.length, 99)}` : ''}`}</button>
+          <button type="button" className="px-btn roll" disabled={rolling} onClick={() => rollCurrent()}>
             {rolling ? '...' : '▶ ROLAR'}
           </button>
-          <button type="button" className="px-btn small" onClick={() => openList('hist')}>☰ HIST.</button>
+          <button type="button" className="px-btn small" onClick={() => setDrawer('log')}>☰ HIST.</button>
         </div>
       </div>
 
