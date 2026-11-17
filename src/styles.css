@@ -396,9 +396,9 @@ h1 { font-family: var(--pixel); font-size: clamp(20px, 4vw, 30px); margin: 0; co
 .screen-hint { position: absolute; left: 0; right: 0; bottom: 8px; margin: 0; z-index: 1; color: var(--lavender); font-size: 17px; opacity: 0.85; pointer-events: none; }
 .screen:hover .screen-hint { color: var(--white); }
 
-/* barra de carga do "segurar 2s" */
+/* barra de carga do "segurar" */
 .hold-bar { position: absolute; left: 0; bottom: 0; height: 8px; width: 0; background: var(--yellow); z-index: 2; pointer-events: none; }
-.hold-bar.on { width: 100%; transition: width 1s linear; }
+.hold-bar.on { width: 100%; transition: width 0.4s linear; }
 @media (max-width: 820px) { .top .px-btn { margin-left: 0; } .top .px-btn:last-child { margin-left: auto; } .top { flex-wrap: wrap; } .top .tag { display: none; } }
 @media (max-width: 820px) {
   .top { flex-wrap: nowrap; gap: 6px; }
@@ -437,7 +437,7 @@ h1 { font-family: var(--pixel); font-size: clamp(20px, 4vw, 30px); margin: 0; co
 /* apagar segurando + reordenar */
 .holdbtn { position: relative; overflow: hidden; min-width: 40px; touch-action: none; user-select: none; -webkit-user-select: none; }
 .holdfill { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: var(--red); }
-.holdbtn.on .holdfill { width: 100%; transition: width 1s linear; }
+.holdbtn.on .holdfill { width: 100%; transition: width 0.4s linear; }
 .holdlabel { position: relative; z-index: 1; }
 .reorder { display: flex; flex-direction: column; gap: 2px; flex: none; }
 .reorder .px-btn { padding: 2px 8px; font-size: 8px; margin: 2px var(--px); }

@@ -64,9 +64,9 @@ async function applyUpdate() {
   window.location.reload();
 }
 
-const DELETE_HOLD_MS = 1000;
+const DELETE_HOLD_MS = 400;
 
-/** Botão que só dispara depois de segurar por 2s, com barra enchendo. */
+/** Botão que só dispara depois de segurar um instante, com barra enchendo. */
 function HoldButton({ onHold, label, children }: { onHold: () => void; label: string; children: React.ReactNode }) {
   const [on, setOn] = useState(false);
   const timer = useRef<number>();
@@ -87,8 +87,8 @@ function HoldButton({ onHold, label, children }: { onHold: () => void; label: st
     <button
       type="button"
       className={`px-btn small ghost holdbtn${on ? ' on' : ''}`}
-      aria-label={`${label} (segure 1 segundo)`}
-      title={`${label}: segure 1 segundo`}
+      aria-label={`${label} (segure um instante)`}
+      title={`${label}: segure 0,4 s`}
       onPointerDown={(e) => {
         e.stopPropagation();
         start();
@@ -130,7 +130,7 @@ const store = {
   },
 };
 
-const HOLD_MS = 1000;
+const HOLD_MS = 400;
 const QUICK_DICE = ['d4', 'd6', 'd8', 'd10', 'd12', 'd20', 'd100', 'dF'];
 const PRESETS: { label: string; expr: string }[] = [
   { label: 'Atributo 4d6kh3', expr: '4d6kh3' },
@@ -255,7 +255,7 @@ export default function App() {
   }, [checkUpdate]);
   const [holding, setHolding] = useState(false);
   const [shakeOn, setShakeOn] = useState(false);
-  const hold = useRef<{ timer?: number; fired: boolean; x: number; y: number; t: number; moved: boolean }>({ fired: false, x: 0, y: 0, t: 0, moved: false });
+  const hold = useRef<{ timer?: number; fired: boolean; x: number; y: number; t: number; moved: boolean; tap: boolean }>({ tap: false, fired: false, x: 0, y: 0, t: 0, moved: false });
   const rollRef = useRef<() => void>(() => {});
   const canShake = typeof window !== 'undefined' && 'DeviceMotionEvent' in window && window.matchMedia?.('(pointer: coarse)').matches;
 
@@ -337,7 +337,7 @@ export default function App() {
     return () => window.removeEventListener('keydown', onKey);
   }, [drawer]);
 
-  // Rolar mantendo pressionado 1s, ou chacoalhando o celular. Toque curto abre os ajustes.
+  // Rolar mantendo pressionado 0,4s, ou chacoalhando o celular. Toque curto abre os ajustes.
   useEffect(() => {
     rollRef.current = () => {
       setDrawer(null);
@@ -371,10 +371,15 @@ export default function App() {
   };
   const onScreenUp = () => {
     const h = hold.current;
-    const wasHolding = !h.fired && !h.moved && h.t > 0;
+    h.tap = !h.fired && !h.moved && h.t > 0;
     cancelHold();
-    if (wasHolding && Date.now() - h.t < 300) setDrawer('config');
     h.t = 0;
+  };
+  // Abre no click (e não no pointerup) para o toque não "vazar" para o fundo da gaveta e fechá-la.
+  const onScreenClick = () => {
+    const h = hold.current;
+    if (h.tap) setDrawer('config');
+    h.tap = false;
   };
 
   // Chacoalhar: duas sacudidas fortes em menos de 0,8 s.
@@ -477,7 +482,7 @@ export default function App() {
   const favManager = (
     <>
       <h2 style={{ color: 'var(--pink)' }}>♥ Favoritas</h2>
-      <p className="blurb">Suas rolagens salvas. Toque numa para rolar na hora. ▲▼ muda a ordem, ✎ o nome, e ✕ apaga se você segurar 1s.</p>
+      <p className="blurb">Suas rolagens salvas. Toque numa para rolar na hora. ▲▼ muda a ordem, ✎ o nome, e ✕ apaga se você segurar um instante.</p>
       {favs.length === 0 ? (
         <p className="small muted">Nenhuma ainda. Escolha um sistema, ajuste a rolagem e toque no ♡ no canto da tela.</p>
       ) : (
@@ -674,10 +679,11 @@ export default function App() {
         <section
           className={`panel screen tone-${result && !rolling ? result.tone : 'idle'}`}
           aria-live="polite"
-          aria-label="Resultado. Toque para editar a rolagem; segure por 1 segundo ou chacoalhe para rolar"
+          aria-label="Resultado. Toque para editar a rolagem; segure ou chacoalhe para rolar"
           onPointerDown={onScreenDown}
           onPointerMove={onScreenMove}
           onPointerUp={onScreenUp}
+          onClick={onScreenClick}
           onPointerCancel={cancelHold}
           onPointerLeave={cancelHold}
           onContextMenu={(e) => e.preventDefault()}
@@ -706,7 +712,7 @@ export default function App() {
           </button>}
           <div className={`hold-bar${holding ? ' on' : ''}`} aria-hidden />
           <p className="screen-hint">
-            segure 1s{shakeOn ? ' ou chacoalhe' : ''} = rolar · toque = editar
+            segure{shakeOn ? ' ou chacoalhe' : ''} = rolar · toque = editar
           </p>
           {result && (
             <div className="result" key={rollKey}>
