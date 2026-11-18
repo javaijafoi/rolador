@@ -1,8 +1,25 @@
-# Rolador
+<div align="center">
 
-Rolador de dados para RPG de mesa com cara de PICO-8. Escolhe o "cartucho" do sistema, ajusta os números e rola.
+# 🎲 Rolador
 
-## Sistemas
+**Rolador de dados para RPG de mesa com cara de PICO-8.**
+Escolhe o "cartucho" do sistema, ajusta os números e rola.
+
+[![Abrir no ar](https://img.shields.io/badge/%E2%96%B6%20abrir%20no%20ar-rolador--nine.vercel.app-ff004d?style=for-the-badge)](https://rolador-nine.vercel.app)
+[![Baixar APK](https://img.shields.io/badge/%E2%AC%87%20baixar-APK%20Android-3ddc84?style=for-the-badge&logo=android&logoColor=white)](https://rolador-nine.vercel.app/rolador.apk)
+
+![React](https://img.shields.io/badge/React-18-61dafb?style=flat-square&logo=react&logoColor=black)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-3178c6?style=flat-square&logo=typescript&logoColor=white)
+![Vite](https://img.shields.io/badge/Vite-5-646cff?style=flat-square&logo=vite&logoColor=white)
+![Capacitor](https://img.shields.io/badge/Capacitor-Android-119eff?style=flat-square&logo=capacitor&logoColor=white)
+![Testes](https://img.shields.io/badge/testes-vitest-6e9f18?style=flat-square&logo=vitest&logoColor=white)
+
+<img src="docs/img/livre.png" alt="Rolador no cartucho LIVRE" width="260"> &nbsp;&nbsp;
+<img src="docs/img/v5.png" alt="Rolagem de Vampiro V5 com dados de Fome" width="260">
+
+</div>
+
+## 🕹️ Sistemas
 
 | Cartucho | Sistema | O que faz |
 | --- | --- | --- |
@@ -19,7 +36,7 @@ Rolador de dados para RPG de mesa com cara de PICO-8. Escolhe o "cartucho" do si
 | DUALITY | Daggerheart | d12 de Esperança + d12 de Medo, vantagem em d6 |
 | 3D6 | GURPS | 3d6 abaixo do NH com sucesso decisivo e falha crítica |
 
-## Notação livre
+## ✍️ Notação livre
 
 - `2d6+3`, `1d8-1d4-2`: soma e subtrai parcelas
 - `4d6kh3` mantém os 3 maiores, `kl` os menores, `dl1`/`dh1` descartam
@@ -31,22 +48,23 @@ Rolador de dados para RPG de mesa com cara de PICO-8. Escolhe o "cartucho" do si
 
 O link da página guarda a última rolagem livre (`/#4d6kh3`), então dá para mandar para a mesa.
 
-## Detalhes
+## ✨ Detalhes
 
 - Aleatoriedade via `crypto.getRandomValues`, sem viés de módulo.
 - Histórico, sistema escolhido e valores ficam só no `localStorage` do navegador. Não há backend.
 - Sons chiptune gerados com WebAudio.
+- Favoritos, histórico e uma chacoalhada para rolar no celular.
 
-## Rodando
+## 🛠️ Rodando
 
 ```sh
 npm install
-npm run dev
-npm test
-npm run build
+npm run dev     # desenvolvimento
+npm test        # testes das regras
+npm run build   # build de produção
 ```
 
-## App Android (APK)
+## 🤖 App Android (APK)
 
 O app web é empacotado com [Capacitor](https://capacitorjs.com), sem depender de internet (fontes e código vão dentro do APK).
 
@@ -57,4 +75,7 @@ npm run apk   # gera android/app/build/outputs/apk/debug/app-debug.apk
 
 Precisa de JDK 17+ e do Android SDK (`ANDROID_HOME`). O APK sai assinado com a chave de debug: serve para instalar direto no celular (permita "instalar apps desconhecidos"). Para atualizar, instale por cima um APK gerado na mesma máquina; se vier de outra, desinstale antes.
 
+---
+
 Começou como um fork do [dice-roller do SeanMcP](https://github.com/SeanMcP/dice-roller); esta versão foi reescrita do zero.
+Feito por [@javaijafoi](https://github.com/javaijafoi) · parte do [portfólio](https://fantasy-portfolio-zeta.vercel.app).
