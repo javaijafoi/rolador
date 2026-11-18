@@ -1,0 +1,15 @@
+# Rolador
+
+> Rolador de dados para RPG de mesa com cara de PICO-8: 12 sistemas (D&D, Fate, Vampiro V5, Cthulhu e mais), notação livre como 4d6kh3 e histórico no navegador.
+
+O Rolador é um rolador de dados para RPG de mesa. Tem cartuchos para 12 sistemas (D&D e Tormenta, Fate, PbtA, Cthulhu, Vampiro V5, Storyteller, Shadowrun, Savage Worlds, Blades, Daggerheart, GURPS) e uma notação livre (2d6+3, 4d6kh3, 8d10>=7). O histórico fica só no navegador. Há também um APK para Android em /rolador.apk.
+
+Feito por Peter (@javaijafoi), desenvolvedor brasileiro. Site em português do Brasil.
+
+## Links
+
+- [Abrir Rolador](https://rolador-javaijafoi.vercel.app/)
+- [Portfólio do Peter](https://javaijafoi.vercel.app): Todos os projetos do Peter (jogos, histórias interativas e experimentos com IA).
+- [Código deste projeto](https://github.com/javaijafoi/rolador): Repositório público no GitHub.
+- [GitHub do Peter](https://github.com/javaijafoi): Perfil do autor.
+- [llms.txt do portfólio](https://javaijafoi.vercel.app/llms.txt): Guia de todos os projetos para IAs.
