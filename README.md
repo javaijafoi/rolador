@@ -5,8 +5,8 @@
 **Rolador de dados para RPG de mesa com cara de PICO-8.**
 Escolhe o "cartucho" do sistema, ajusta os números e rola.
 
-[![Abrir no ar](https://img.shields.io/badge/%E2%96%B6%20abrir%20no%20ar-rolador--nine.vercel.app-ff004d?style=for-the-badge)](https://rolador-nine.vercel.app)
-[![Baixar APK](https://img.shields.io/badge/%E2%AC%87%20baixar-APK%20Android-3ddc84?style=for-the-badge&logo=android&logoColor=white)](https://rolador-nine.vercel.app/rolador.apk)
+[![Abrir no ar](https://img.shields.io/badge/%E2%96%B6%20abrir%20no%20ar-rolador--nine.vercel.app-ff004d?style=for-the-badge)](https://rolador-javaijafoi.vercel.app)
+[![Baixar APK](https://img.shields.io/badge/%E2%AC%87%20baixar-APK%20Android-3ddc84?style=for-the-badge&logo=android&logoColor=white)](https://rolador-javaijafoi.vercel.app/rolador.apk)
 
 ![React](https://img.shields.io/badge/React-18-61dafb?style=flat-square&logo=react&logoColor=black)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-3178c6?style=flat-square&logo=typescript&logoColor=white)
@@ -77,5 +77,24 @@ Precisa de JDK 17+ e do Android SDK (`ANDROID_HOME`). O APK sai assinado com a c
 
 ---
 
+## 🌴 Mais do Peter
+
+Este projeto faz parte do [**portfólio do Peter**](https://javaijafoi.vercel.app), uma vitrine de jogos, histórias interativas e experimentos com IA, todos no ar. Perfil no GitHub: [@javaijafoi](https://github.com/javaijafoi).
+
+| Projeto | No ar | Código |
+| --- | --- | --- |
+| **Antigravitus**: Diário de aventuras num RPG de texto, jogado por agentes de IA | [abrir](https://antigravitus.vercel.app) | [repo](https://github.com/javaijafoi/antigravitus) |
+| **Picotron Arena**: Dez modos de arcade num computador de fantasia | [abrir](https://picotron-arena.vercel.app) | [repo](https://github.com/javaijafoi/picotron-arcade) |
+| **Jogo do Davi**: Jogo para crianças aprenderem a ler e a contar | [abrir](https://jogo-davi.vercel.app) | [repo](https://github.com/javaijafoi/Jogo-davi) |
+| **Matusalém**: História interativa de mistério no Bixiga | [abrir](https://matusalem-six.vercel.app) | — |
+| **Era Vargas: O Equilibrista**: Jogo 3D de decisões sobre o Brasil de 1930 a 1945 | [abrir](https://era-vargas-seliga.vercel.app) | [repo](https://github.com/javaijafoi/era-vargas-seliga) |
+| **Pinta-Kara**: Desenhe no ar com as mãos, só com a webcam | [abrir](https://pinta-kara.vercel.app) | [repo](https://github.com/javaijafoi/pinta-kara) |
+| **iFone**: Celular de mentira para mesas de #iHunt | [abrir](https://ifone-javaijafoi.vercel.app) | [repo](https://github.com/javaijafoi/ifone) |
+| **Pico Poetry**: Poemas em pixel para sortear e compartilhar como imagem | [abrir](https://pico-poetry.vercel.app) | — |
+| **#iHunt Chronicle**: Mesa virtual para o RPG #iHunt (em pausa) | [abrir](https://ihunt-chronicle.vercel.app) | — |
+| **iHunt App**: Fork do Fari App (Fate) para mesas de #iHunt | — | [repo](https://github.com/javaijafoi/iHunt-app) |
+
+---
+
 Começou como um fork do [dice-roller do SeanMcP](https://github.com/SeanMcP/dice-roller); esta versão foi reescrita do zero.
-Feito por [@javaijafoi](https://github.com/javaijafoi) · parte do [portfólio](https://fantasy-portfolio-zeta.vercel.app).
+Feito por [@javaijafoi](https://github.com/javaijafoi) · parte do [portfólio](https://javaijafoi.vercel.app).
