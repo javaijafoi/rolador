@@ -826,7 +826,7 @@ export default function App() {
           por{' '}
           <a href="https://github.com/javaijafoi" target="_blank" rel="noopener noreferrer">@javaijafoi</a>
           {' · '}
-          <a href="https://fantasy-portfolio-zeta.vercel.app" target="_blank" rel="noopener noreferrer">portfólio</a>
+          <a href="https://javaijafoi.vercel.app" target="_blank" rel="noopener noreferrer">portfólio</a>
           {' · '}
           <a href="https://github.com/javaijafoi/rolador" target="_blank" rel="noopener noreferrer">código</a>
           {!isAndroidApp && (
