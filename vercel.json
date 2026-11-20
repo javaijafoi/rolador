@@ -38,5 +38,18 @@
         }
       ]
     }
+  ],
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "rolador-javaijafoi.vercel.app"
+        }
+      ],
+      "destination": "https://rolador.javaijafoi.dev/:path*",
+      "statusCode": 301
+    }
   ]
 }
