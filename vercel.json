@@ -41,14 +41,14 @@
   ],
   "redirects": [
     {
-      "source": "/:path*",
+      "source": "/(.*)",
       "has": [
         {
           "type": "host",
           "value": "rolador-javaijafoi.vercel.app"
         }
       ],
-      "destination": "https://rolador.javaijafoi.dev/:path*",
+      "destination": "https://rolador.javaijafoi.dev/$1",
       "statusCode": 301
     }
   ]
